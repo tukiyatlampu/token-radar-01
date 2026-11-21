@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#board-table">Skip to the board</a>
+
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div>
+      <p class="brand-name">Token Radar</p>
+      <h1>Pre-token protocols, ranked by implied value</h1>
+    </div>
+  </div>
+  <dl class="top-meta">
+    <div><dt>Snapshot</dt><dd id="meta-asof">—</dd></div>
+    <div><dt>TVL floor</dt><dd id="meta-floor">—</dd></div>
+    <div><dt>Candidates</dt><dd id="meta-count">—</dd></div>
+    <div><dt>Board token status</dt><dd>No token recorded</dd></div>
+  </dl>
+</header>
+
+<main class="shell">
+  <p id="data-error" class="error" hidden>Data not loaded: <code>data.js</code> is missing or did not define <code>window.RADAR</code>. The board cannot render without it.</p>
+
+  <section class="summary" aria-label="Coverage summary">
+    <article class="stat"><span class="stat-label">Watchlist covered</span><b class="stat-value" id="stat-coverage">—</b><span class="stat-note">of 40 watchlist protocols</span></article>
+    <article class="stat"><span class="stat-label">Median implied value</span><b class="stat-value" id="stat-median">—</b><span class="stat-note">watchlist protocols</span></article>
+    <article class="stat"><span class="stat-label">Categories</span><b class="stat-value" id="stat-categories">—</b><span class="stat-note">across the ranked board</span></article>
+    <article class="stat"><span class="stat-label">Early radar</span><b class="stat-value" id="stat-early">—</b><span class="stat-note">pre-token rows below the $50M TVL floor</span></article>
+  </section>
+
+  <p class="lede">Every protocol on this board is pre-token. Implied value is a heuristic score expressed in dollars, built only from snapshot figures — TVL, seven-day change, listing age, chains and category — calibrated against live-token peers. Not a price, not a promise.</p>
+
+  <div class="tabs" role="tablist" aria-label="Views">
+    <button type="button" role="tab" id="tab-board" aria-selected="true" aria-controls="view-board" data-tab="board">Board</button>
+    <button type="button" role="tab" id="tab-live" aria-selected="false" aria-controls="view-live" tabindex="-1" data-tab="live">Live tokens</button>
+    <button type="button" role="tab" id="tab-model" aria-selected="false" aria-controls="view-model" tabindex="-1" data-tab="model">Model</button>
+    <button type="button" role="tab" id="tab-peers" aria-selected="false" aria-controls="view-peers" tabindex="-1" data-tab="peers">Trading peers</button>
+  </div>
+
+  <section id="view-board" role="tabpanel" aria-labelledby="tab-board">
+    <div class="toolbar">
+      <div class="field">
+        <label for="q">Search</label>
+        <input type="search" id="q" placeholder="Name or slug" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category"><option value="all">All categories</option></select>
+      </div>
+      <div class="field">
+        <label for="chain">Chain</label>
+        <select id="chain"><option value="all">All chains</option></select>
+      </div>
+      <div class="field">
+        <label for="min-tvl">Min TVL ($)</label>
+        <input type="number" id="min-tvl" min="0" step="1000000" placeholder="0">
+      </div>
+      <label class="check"><input type="checkbox" id="watchlist-only"> Watchlist only</label>
+      <div class="field">
+        <label for="plan">Plan</label>
+        <select id="plan"><option value="all">All plans</option><option value="deployable">Deployment planned</option><option value="research">Research only</option></select>
+      </div>
+      <div class="field">
+        <label for="status">Token status</label>
+        <select id="status"><option value="pre-token">Pre-token (board)</option><option value="live">Live tokens</option></select>
+      </div>
+      <span class="count" id="row-count" aria-live="polite"></span>
+      <button type="button" class="button" id="clear-filters">Clear filters</button>
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table id="board-table">
+          <caption>Pre-token protocols. Select a row for its model breakdown and farm plan.</caption>
+          <thead>
+            <tr>
+              <th scope="col"><button type="button" data-sort="rank">Board rank <span class="arrow" data-arrow="rank"></span></button></th>
+              <th scope="col"><button type="button" data-sort="name">Protocol <span class="arrow" data-arrow="name"></span></button></th>
+              <th scope="col" class="num"><button type="button" data-sort="implied">Implied value <span class="arrow" data-arrow="implied"></span></button></th>
+              <th scope="col" class="num"><button type="button" data-sort="tvl">TVL <span class="arrow" data-arrow="tvl"></span></button></th>
+              <th scope="col" class="num"><button type="button" data-sort="change">7d <span class="arrow" data-arrow="change"></span></button></th>
+              <th scope="col" class="num"><button type="button" data-sort="age">Age <span class="arrow" data-arrow="age"></span></button></th>
+              <th scope="col">Watchlist</th>
+              <th scope="col">Plan</th>
+            </tr>
+          </thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="board-empty" hidden>
+        <h2>No protocol matches that filter</h2>
+        <p>Clear the search or pick another category to see the board again.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-live" role="tabpanel" aria-labelledby="tab-live" hidden>
+    <p class="lede">These protocols already trade. Their market cap is a market fact, not a model estimate, so they are never ranked as implied value and never appear on the board.</p>
+    <div class="toolbar">
+      <div class="field">
+        <label for="live-q">Search</label>
+        <input type="search" id="live-q" placeholder="Name or slug" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="live-category">Category</label>
+        <select id="live-category"><option value="all">All categories</option></select>
+      </div>
+      <div class="field">
+        <label for="live-status">Token status</label>
+        <select id="live-status"><option value="pre-token">Pre-token (board)</option><option value="live">Live tokens</option></select>
+      </div>
+      <span class="count" id="live-count" aria-live="polite"></span>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table id="live-table">
+          <caption>Live-token protocols. Select a row for its market facts.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Protocol</th>
+              <th scope="col" class="num"><button type="button" data-sort-live="mcap">Market cap <span class="arrow" data-arrow="mcap"></span></button></th>
+              <th scope="col" class="num"><button type="button" data-sort-live="tvl">TVL <span class="arrow" data-arrow="tvl"></span></button></th>
+              <th scope="col" class="num">7d</th>
+              <th scope="col">Token</th>
+            </tr>
+          </thead>
+          <tbody id="live-body"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="live-empty" hidden>
+        <h2>No live-token protocol matches that filter</h2>
+        <p>Clear the search or pick another category to see the live list again.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-model" role="tabpanel" aria-labelledby="tab-model" hidden>
+    <div class="panel explainer">
+      <h2>How implied value is computed</h2>
+      <p>One function scores every protocol from snapshot figures only; no name is special-cased.</p>
+      <p class="formula">implied&nbsp;=&nbsp;max(1,&nbsp;round(T<sub>eff</sub> × category&nbsp;multiple × growth&nbsp;multiplier × maturity&nbsp;multiplier × chain&nbsp;multiplier))</p>
+      <p>T<sub>eff</sub> is log-scaled effective TVL: large TVL still counts, but each extra dollar counts less, so size alone cannot dominate the ranking. The category multiple starts from the geometric-mean mcap/TVL ratio of live-token peers in the same category, blended toward the shrunk global multiple in log space (weight 0.15 × n/(n+12)); the global blends the cohort geomean toward a fixed 0.2 prior (0.2), then clamps. No live peers → the global multiple. Growth is asymmetric — falls hurt more than rises help — but all three factors are damped to 0.05, so they barely move the ranking.</p>
+      <h3>Exact equations</h3>
+      <ul>
+        <li>T<sub>eff</sub> = 250,000,000 × ln(1 + TVL / 250,000,000)</li>
+        <li>growth = exp(1.8 × min(x, 0) + 0.55 × max(x, 0)), clamped to [0.35, 1.5], then ^0.05, where x = clamp(change_7d / 100, −0.6, 1.2); missing change → x = 0</li>
+        <li>maturity = 0.55 + 0.45 × (1 − exp(−age_days / 540)), then ^0.05; missing listing date → age = 365 days</li>
+        <li>chain = 1 + 0.04 × log2(min(max(chains, 1), 8)), then ^0.05</li>
+        <li>multiple = exp(w × ln(category geomean) + (1 − w) × ln(global multiple)), w = 0.15 × n / (n + 12), n = live peers in the category, r = clamp(mcap / TVL, 0.02, 3) for every geomean, clamped to [max(0.02, 0.25 × global multiple), min(3, 4 × global multiple)]; global multiple = exp(0.2 × ln(cohort geomean) + 0.8 × ln(0.2))</li>
+      </ul>
+      <p>What the ranking is for: the factors are heuristic preferences, not fitted predictors — they encode what a token-launch hunter wants to surface: higher-multiple categories, downside-weighted momentum, longest time since listing, multi-chain presence. Held-out market-cap prediction is not the objective; discovery is. The constants were tuned on this cohort's leave-one-out diagnostics, so the check below is a development diagnostic, not a generalization claim — the model beats the starter on both MedAPE and Spearman, by a small margin.</p>
+      <h3>Calibration check</h3>
+      <div id="model-eval"></div>
+      <p class="note">Cohort: every protocol with market cap and TVL present and positive — 128 peers, including 9 CEX. Live tab: the 24 largest non-CEX live-token protocols. Per-peer evaluation as JSON:</p>
+      <p><button type="button" class="button" id="eval-download">Download evaluation (JSON)</button></p>
+      <h3>Ranking sensitivity</h3>
+      <div id="model-ablation"></div>
+      <h3>Model vs the starter</h3>
+      <div id="model-starter"></div>
+      <h3>Provenance</h3>
+      <p id="model-source"></p>
+      <h3>Constants</h3>
+      <dl class="constants" id="model-constants"></dl>
+      <h3>Missing-data assumptions</h3>
+      <ul>
+        <li>Seven-day change missing → neutral, marked “n/a”.</li>
+        <li>Listing date missing → age 365 days (maturity ≈0.99×), shown “unknown”.</li>
+        <li>No chains listed → no chain bonus.</li>
+        <li>Category with no live-token peers → shrunk global multiple.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="view-peers" role="tabpanel" aria-labelledby="tab-peers" hidden>
+    <p class="lede">Calibration: each category multiple blends the geometric-mean mcap/TVL ratio of live-token protocols in that category with the shrunk global multiple (0.15 × n/(n+12)), then clamps.</p>
+    <div class="panel">
+      <div class="table-wrap">
+        <table id="peers-table">
+          <caption>Category calibration.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col" class="num">Live peers (n)</th>
+              <th scope="col" class="num">Geomean mcap / TVL</th>
+              <th scope="col" class="num">Category weight (w)</th>
+              <th scope="col" class="num">Multiple applied</th>
+            </tr>
+          </thead>
+          <tbody id="peers-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top: 16px;">
+      <div class="table-wrap">
+        <table id="cohort-table">
+          <caption>Calibration cohort — every live-token peer behind the geomeans above (geomeans use ratios clipped to [0.02, 3]). <span id="cohort-count" aria-live="polite"></span></caption>
+          <thead>
+            <tr>
+              <th scope="col">Protocol</th>
+              <th scope="col">Category</th>
+              <th scope="col" class="num">Market cap</th>
+              <th scope="col" class="num">TVL</th>
+              <th scope="col" class="num">mcap / TVL</th>
+            </tr>
+          </thead>
+          <tbody id="cohort-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+  <div class="drawer-head">
+    <div>
+      <span class="sub" id="drawer-rank"></span>
+      <h2 id="drawer-title"></h2>
+      <p class="sub" id="drawer-sub"></p>
+    </div>
+    <button type="button" class="button" id="drawer-close">Close</button>
+  </div>
+  <div id="drawer-body"></div>
+</aside>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
